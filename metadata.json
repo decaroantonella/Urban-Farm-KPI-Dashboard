@@ -1,0 +1,5 @@
+{
+  "name": "Urban Farm KPI Dashboard",
+  "description": "A dashboard to visualize Key Performance Indicators (KPIs) for an intelligent urban farm, allowing data input and displaying alerts based on predefined thresholds.",
+  "requestFramePermissions": []
+}
