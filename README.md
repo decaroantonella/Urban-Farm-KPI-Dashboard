@@ -28,24 +28,24 @@ The data flow within the Urban Farm KPI Dashboard is designed to be reactive, up
 
 ```mermaid
 graph TD
-    A[User Input in KpiCard] --onChange--> B(handleInputChange in App.tsx);
-    B --updates--> C{inputValues State};
-    C --triggers useEffect in App.tsx--> D{KPI Calculation Loop};
-    D --uses KPI_DEFINITIONS & inputValues--> E[Individual KPI Values & Scores];
-    E --evaluateKpi()--> F[KPI Results (value, level, message, score)];
-    F --updates--> G{kpiResults State};
-    G --data for--> H[Render KpiCard for KPIs];
+    A["User Input in KpiCard"] --onChange--> B("handleInputChange in App.tsx");
+    B --updates--> C{"inputValues State"};
+    C --"triggers useEffect in App.tsx"--> D{"KPI Calculation Loop"};
+    D --"uses KPI_DEFINITIONS & inputValues"--> E["Individual KPI Values & Scores"];
+    E --"evaluateKpi()"--> F["KPI Results (value, level, message, score)"];
+    F --updates--> G{"kpiResults State"};
+    G --"data for"--> H["Render KpiCard for KPIs"];
 
-    D --prepares kpiScoresForComposites--> I{Composite Index Calculation - Stage 1 (ISA, IIS, IDT)};
-    I --uses COMPOSITE_INDEX_DEFINITIONS & kpiScoresForComposites & scoresForIdt--> J[ISA, IIS, IDT Values & Scores];
-    J --evaluateCompositeIndex()--> K[ISA, IIS, IDT Results];
-    K --updates partial--> L{compositeIndexResults State};
+    D --"prepares kpiScoresForComposites"--> I{"Composite Index Calculation - Stage 1 (ISA, IIS, IDT)"};
+    I --"uses COMPOSITE_INDEX_DEFINITIONS & kpiScoresForComposites & scoresForIdt"--> J["ISA, IIS, IDT Values & Scores"];
+    J --"evaluateCompositeIndex()"--> K["ISA, IIS, IDT Results"];
+    K --"updates partial"--> L{"compositeIndexResults State"};
 
-    J --prepares computedCompositeScores--> M{Composite Index Calculation - Stage 2 (IGD)};
-    M --uses COMPOSITE_INDEX_DEFINITIONS & computedCompositeScores--> N[IGD Value & Score];
-    N --evaluateCompositeIndex()--> O[IGD Result];
-    O --updates final--> L;
-    L --data for--> P[Render KpiCard for Composite Indices];
+    J --"prepares computedCompositeScores"--> M{"Composite Index Calculation - Stage 2 (IGD)"};
+    M --"uses COMPOSITE_INDEX_DEFINITIONS & computedCompositeScores"--> N["IGD Value & Score"];
+    N --"evaluateCompositeIndex()"--> O["IGD Result"];
+    O --"updates final"--> L;
+    L --"data for"--> P["Render KpiCard for Composite Indices"];
 ```
 
 **Detailed Steps:**
@@ -204,11 +204,3 @@ The application should now be running, displaying the Urban Farm KPI Dashboard.
 *   **More Granular KPI Inputs:** Allow for more detailed data entry for complex KPIs.
 *   **Customizable Thresholds:** Enable users to adjust KPI performance thresholds based on specific farm goals.
 *   **Export/Import Data:** Allow users to export their KPI data or import data from other sources.
----
-```
-
-This README should provide a thorough understanding of the project.
-</content>
-  </change>
-</changes>
-```
