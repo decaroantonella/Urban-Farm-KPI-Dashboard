@@ -1,206 +1,220 @@
+# Dashboard de KPIs para Granjas Urbanas
 
-# Urban Farm KPI Dashboard
+## Descripción General
 
-## 1. Project Overview
+Esta aplicación es un dashboard interactivo diseñado para visualizar y configurar Indicadores Clave de Rendimiento (KPIs) para granjas urbanas, con un enfoque en métricas de sostenibilidad. Permite a los usuarios monitorear KPIs ambientales, sociales y técnico-operacionales, ver sus tendencias históricas, ajustar umbrales de rendimiento y comprender las fórmulas detrás de los cálculos. El objetivo es proporcionar una herramienta para el "Estudio del Impacto de las Granjas Urbanas en Ciudades Inteligentes", basado en el Proyecto Integrador para la obtención del Título de Grado Ingeniero Electrónico de la Universidad Nacional de Córdoba.
 
-The Urban Farm KPI Dashboard is a web application designed to visualize Key Performance Indicators (KPIs) for an intelligent urban farm. It allows users to input data related to various operational aspects of the farm and dynamically displays the performance levels, alerts, and insights based on predefined thresholds and calculation logic. The dashboard also calculates and displays composite indices to provide a holistic view of the farm's sustainability, social impact, and technological development.
+## Características Principales
 
-**Key Features:**
+*   **Visualización de KPIs:** Muestra KPIs base y KPIs compuestos con valores actuales, descripciones y estados de rendimiento codificados por colores.
+*   **Tendencias Históricas:** Cada KPI (base y compuesto) presenta un gráfico de líneas mostrando su evolución temporal.
+*   **Configuración de Umbrales:** Los usuarios pueden ajustar los umbrales (Óptimo, Aceptable, Requiere Atención) para cada KPI, lo que afecta dinámicamente su estado y las líneas de referencia en los gráficos.
+*   **Carga de Datos CSV:** Permite a los usuarios cargar datos históricos para los KPIs base mediante un archivo CSV.
+*   **Generación de Datos Aleatorios:** Opción para popular el dashboard con datos de ejemplo generados aleatoriamente.
+*   **Filtrado por Fechas:** Los usuarios pueden seleccionar un rango de fechas para analizar las tendencias históricas en un período específico.
+*   **Modales Interactivos:**
+    *   **Fórmula:** Muestra la fórmula y explicación de cálculo para cada KPI.
+    *   **Expandir:** Proporciona una vista detallada de un KPI, incluyendo un gráfico de tendencia más grande.
+    *   **Ayuda CSV:** Guía sobre el formato correcto para la carga de archivos CSV.
+*   **Diseño Responsivo:** Interfaz adaptable a diferentes tamaños de pantalla.
+*   **Índices Compuestos:** Calcula y muestra cuatro índices compuestos clave:
+    *   Índice de Sostenibilidad Ambiental (ISA)
+    *   Índice de Impacto Social (IIS)
+    *   Índice de Desarrollo Tecnológico (IDT)
+    *   Índice Global de Desempeño (IGD) - destacado como el más importante.
+*   **Categorización de KPIs:** Los KPIs base se agrupan en Sostenibilidad Ambiental, Impacto Social y Desarrollo Tecnológico y Operativo.
 
-*   **Dynamic KPI Calculation:** Real-time calculation of KPIs based on user inputs.
-*   **Visual Feedback:** Color-coded status indicators, icons, and progress bars for intuitive understanding of performance.
-*   **Composite Indices:** Aggregation of individual KPIs into higher-level indices (Environmental Sustainability, Social Impact, Technological Development, Global Performance).
-*   **Interactive Data Input:** Easy-to-use input fields for each relevant metric.
-*   **Initial Prototype Data:** Pre-filled with data representing a "Unidad de Trabajo" prototype for immediate visualization.
-*   **Responsive Design:** Adapts to different screen sizes.
-*   **Dark Mode:** Toggle between light and dark themes for user comfort.
-*   **User-Friendly Interface:** Enhanced with icons and clear visual hierarchy.
+## Stack Tecnológico
 
-**Target Audience:**
+*   **React:** Biblioteca de JavaScript para construir interfaces de usuario.
+*   **TypeScript:** Superset de JavaScript que añade tipado estático.
+*   **Tailwind CSS:** Framework de CSS "utility-first" para un diseño rápido y responsivo.
+*   **Recharts:** Biblioteca de gráficos para React, utilizada para los gráficos de tendencias.
+*   **ESM (ECMAScript Modules):** Uso de módulos nativos de JavaScript importados vía `esm.sh` en `index.html`.
 
-*   Urban farm operators and managers.
-*   Researchers and students in agriculture, sustainability, and smart city development.
-*   Stakeholders interested in the performance and impact of urban farming initiatives.
-
-## 2. Data Flow
-
-The data flow within the Urban Farm KPI Dashboard is designed to be reactive, updating visualizations and calculations automatically as users modify input values.
-
-```mermaid
-graph TD
-    A["User Input in KpiCard"] --onChange--> B("handleInputChange in App.tsx");
-    B --updates--> C{"inputValues State"};
-    C --"triggers useEffect in App.tsx"--> D{"KPI Calculation Loop"};
-    D --"uses KPI_DEFINITIONS & inputValues"--> E["Individual KPI Values & Scores"];
-    E --"evaluateKpi()"--> F["KPI Results (value, level, message, score)"];
-    F --updates--> G{"kpiResults State"};
-    G --"data for"--> H["Render KpiCard for KPIs"];
-
-    D --"prepares kpiScoresForComposites"--> I{"Composite Index Calculation - Stage 1 (ISA, IIS, IDT)"};
-    I --"uses COMPOSITE_INDEX_DEFINITIONS & kpiScoresForComposites & scoresForIdt"--> J["ISA, IIS, IDT Values & Scores"];
-    J --"evaluateCompositeIndex()"--> K["ISA, IIS, IDT Results"];
-    K --"updates partial"--> L{"compositeIndexResults State"};
-
-    J --"prepares computedCompositeScores"--> M{"Composite Index Calculation - Stage 2 (IGD)"};
-    M --"uses COMPOSITE_INDEX_DEFINITIONS & computedCompositeScores"--> N["IGD Value & Score"];
-    N --"evaluateCompositeIndex()"--> O["IGD Result"];
-    O --"updates final"--> L;
-    L --"data for"--> P["Render KpiCard for Composite Indices"];
-```
-
-**Detailed Steps:**
-
-1.  **User Input:**
-    *   The user interacts with input fields within individual `KpiCard` components.
-    *   When an input value changes, the `onInputChange` callback (passed from `App.tsx`) is triggered.
-
-2.  **State Update (Input Values):**
-    *   `App.tsx`'s `handleInputChange` function updates the `inputValues` state with the new data. This state object holds all raw values entered by the user or the initial prototype data.
-
-3.  **Effect Hook Trigger & KPI Calculation:**
-    *   The `useEffect` hook in `App.tsx` listens for changes in the `inputValues` state.
-    *   When `inputValues` changes, the effect hook executes:
-        *   **Individual KPIs:** It iterates through `KPI_DEFINITIONS`.
-            *   For each KPI, if a `calculate` function is defined, it's called with the current `inputValues` to compute the KPI's raw value.
-            *   If a `directInputKey` is defined, the value is taken directly from `inputValues`.
-            *   The raw value is then passed to `evaluateKpi` (from `utils/evaluationHelpers.ts`) along with its definition. `evaluateKpi` determines the performance `level`, `colorClass`, `message`, and a normalized `score` (0-1) based on the predefined `ranges`.
-            *   The results for all individual KPIs are collected and stored in the `kpiResults` state.
-
-4.  **Composite Index Score Preparation:**
-    *   Normalized scores (`score` property, 0-1) from the `kpiResults` are extracted to be used as inputs for composite indices.
-    *   Special scores like `ESM_norm` (from the ESM KPI's score) and `EAD_norm` (directly from `inputValues.eficienciaAnalisisDatos`) are prepared specifically for the IDT (Technological Development Index).
-
-5.  **Composite Index Calculation (Staged):**
-    *   **Stage 1 (ISA, IIS, IDT):**
-        *   The dashboard iterates through `COMPOSITE_INDEX_DEFINITIONS`.
-        *   For ISA (Environmental Sustainability Index) and IIS (Social Impact Index), `calculateCompositeIndexValue` is called. This function, in turn, calls the respective `calculate` function from the index definition, passing the normalized KPI scores.
-        *   For IDT, `calculateCompositeIndexValue` is called, passing the specially prepared `scoresForIdt` (which includes IITSF score, ESM_norm, and EAD_norm).
-        *   The raw calculated value for each of these composite indices is then passed to `evaluateCompositeIndex`. This function determines the `level`, `colorClass`, and `message` based on the index's predefined `ranges`. The calculated value itself is used as the `score` for composite indices.
-        *   These results (ISA, IIS, IDT) are temporarily stored.
-    *   **Stage 2 (IGD):**
-        *   The IGD (Global Performance Index) definition is retrieved.
-        *   `calculateCompositeIndexValue` is called for IGD. Crucially, for IGD, the `kpiScores` argument is empty, and the `computedCompositeScores` argument is populated with the results (values) of ISA, IIS, and IDT calculated in Stage 1.
-        *   The IGD's `calculate` function then uses these pre-calculated composite index values.
-        *   The result of IGD is evaluated using `evaluateCompositeIndex`.
-    *   All composite index results (ISA, IIS, IDT, IGD) are then stored in the `compositeIndexResults` state.
-
-6.  **Rendering:**
-    *   React re-renders `App.tsx` and its children due to state changes (`kpiResults`, `compositeIndexResults`).
-    *   `KpiCard` components receive their respective `definition` and `result` (either from `kpiResults` or `compositeIndexResults`).
-    *   `KpiCard` then displays the KPI/index name, description, icon, calculated value, unit, performance level, message, and the visual progress bar (for percentage KPIs). Input fields within `KpiCard` (if applicable) reflect the current `inputValues`.
-
-7.  **Dark Mode Toggling:**
-    *   The `toggleDarkMode` function updates the `darkMode` state and toggles the 'dark' class on the `<html>` element, allowing Tailwind CSS to apply dark mode styles.
-
-## 3. File Structure
+## Estructura de Archivos
 
 ```
 .
-├── README.md
-├── index.html                # HTML entry point, Tailwind CSS setup, ES module imports
-├── index.tsx                 # Main React application entry (ReactDOM.createRoot)
-├── App.tsx                   # Main application component, state management, layout
-├── types.ts                  # TypeScript type definitions
-├── metadata.json             # Application metadata
-├── components/               # Reusable UI components
-│   ├── Icons.tsx             # SVG icon components
-│   ├── KpiCard.tsx           # Displays individual KPI/Composite Index cards
-│   ├── KpiInputGroup.tsx     # Renders input fields for a KPI
-│   └── SectionTitle.tsx      # Component for section titles
-├── constants/                # Definitions for KPIs and indices
-│   ├── kpiDefinitions.ts     # Definitions for all individual KPIs
-│   └── compositeIndexDefinitions.ts # Definitions for composite indices
-└── utils/                    # Helper functions
-    └── evaluationHelpers.ts  # Logic for calculating and evaluating KPIs/Indices
+├── README.md                # Este archivo
+├── index.html               # Punto de entrada HTML, carga de scripts y estilos
+├── index.tsx                # Punto de entrada de la aplicación React, renderiza <App />
+├── App.tsx                  # Componente principal, maneja el estado global y la lógica
+├── constants.ts             # KPIs iniciales, funciones de generación de datos de ejemplo
+├── types.ts                 # Definiciones de tipos y enumeraciones de TypeScript
+├── metadata.json            # Metadatos de la aplicación
+│
+├── components/              # Componentes reutilizables de la UI
+│   ├── Dashboard.tsx        # Layout principal del dashboard
+│   ├── KpiCard.tsx          # Tarjeta para mostrar un KPI base
+│   ├── CompositeKpiCard.tsx # Tarjeta para mostrar un KPI compuesto
+│   ├── TrendChart.tsx       # Componente para el gráfico de tendencias
+│   ├── FormulaModal.tsx     # Modal para mostrar fórmulas
+│   ├── ExpandedKpiModal.tsx # Modal para la vista expandida de un KPI
+│   ├── ThresholdConfigModal.tsx # Modal para configurar umbrales
+│   ├── HelpModal.tsx        # Modal de ayuda para la carga de CSV
+│   │
+│   └── icons/               # Componentes de iconos SVG
+│       ├── CarbonIcon.tsx
+│       ├── CogIcon.tsx
+│       ├── CommunityIcon.tsx
+│       └── ... (otros iconos)
+│
+└── logic/                   # Lógica de negocio y cálculos
+    ├── calculations.ts      # Funciones para calcular estados de KPIs, normalización y valores de índices compuestos
+    └── formulas.ts          # Funciones para generar explicaciones de fórmulas y formatear valores
 ```
 
-## 4. KPIs and Composite Indices
+## KPIs y Métricas
 
-The dashboard tracks a range of KPIs categorized into:
+### KPIs Base
+Los KPIs base se dividen en tres categorías principales:
 
-*   **Sostenibilidad Ambiental (Environmental Sustainability):**
-    *   `EUA`: Uso Eficiente del Agua (Water Use Efficiency)
-    *   `PER`: Porcentaje de Energía Renovable (Renewable Energy Percentage)
-    *   `IRR`: Índice de Reciclaje de Residuos (Waste Recycling Index)
-    *   `IIC`: Índice de Intensidad de Carbono (Carbon Intensity Index)
-*   **Impacto Social (Social Impact):**
-    *   `AAL`: Acceso a Alimentos Locales (Access to Local Food)
-    *   `IPCA`: Participación Comunitaria (Community Participation)
-    *   `ISAC`: Seguridad Alimentaria y Calidad (Food Safety and Quality)
-*   **Desarrollo y Operación Tecnológica (Technological Development & Operation):**
-    *   `ICS`: Salud del Suelo/Sustrato (Soil/Substrate Health)
-    *   `IITSF`: Inversión en Tecnologías Smart (Investment in Smart Technologies)
-    *   `IRA`: Reducción Uso de Agroquímicos (Agrochemical Use Reduction)
-    *   `ESM`: Eficiencia Sistema de Monitoreo (Monitoring System Efficiency)
-    *   `EAD`: Eficiencia en Análisis de Datos (Data Analysis Efficiency)
+1.  **Sostenibilidad Ambiental:**
+    *   `eua`: Uso Eficiente del Agua (Lts/Kg)
+    *   `per`: Porcentaje de Energía Renovable (%)
+    *   `irr`: Índice de Reciclaje y Valorización de Residuos (%)
+    *   `iic`: Emisiones de Carbono (kgCO2eq/kg)
+    *   `ics`: Salud del Suelo/Medio de Cultivo (%)
+    *   `ira`: Reducción Uso Pesticidas/Fertilizantes (%)
 
-**Composite Indices:**
+2.  **Impacto Social:**
+    *   `iaal`: Acceso a Alimentos Locales (% cobertura)
+    *   `ipca`: Participación Comunitaria (% ocupación)
+    *   `isac`: Seguridad Alimentaria y Calidad (% cumplimiento)
 
-These provide a higher-level overview:
+3.  **Desarrollo Tecnológico y Operativo:**
+    *   `iitsf`: Inversión en Tecnologías Smart Farming (% anual)
+    *   `esm`: Eficiencia Sistema de Monitoreo (% uptime)
 
-*   **ISA (Índice de Sostenibilidad Ambiental):** Aggregates EUA, PER, IRR, IIC.
-*   **IIS (Índice de Impacto Social):** Aggregates AAL, IPCA, ISAC.
-*   **IDT (Índice de Desarrollo Tecnológico):** Aggregates IITSF, ESM (normalized score), EAD (normalized value).
-*   **IGD (Índice Global de Desempeño):** Aggregates ISA, IIS, IDT to give an overall performance score.
+Cada KPI base tiene un valor actual, datos históricos, umbrales configurables, una interpretación de valor (si más alto es mejor o más bajo es mejor) y un icono representativo.
 
-**Unidad de Trabajo Prototipo:**
-The application initializes with sample data in `App.tsx` (`initialInputValues`) representing a hypothetical urban farm prototype performing at an "Aceptable" or "Bueno" level across most KPIs. This allows users to immediately see the dashboard in action.
+### KPIs Compuestos
+Estos índices se calculan a partir de los KPIs base normalizados:
 
-## 5. Technical Stack
+1.  **ISA (Índice de Sostenibilidad Ambiental):**
+    *   `ISA = 0.4 * EUA_norm + 0.3 * PER_norm + 0.3 * IRR_norm`
+    *   Integra KPIs de impacto ambiental.
 
-*   **React 19:** For building the user interface.
-*   **TypeScript:** For static typing and improved code quality.
-*   **Tailwind CSS:** For utility-first styling, configured directly in `index.html`.
-*   **ES Modules (ESM):** Imported directly in `index.html` via `esm.sh` for React and ReactDOM, enabling a buildless development experience for this simple setup.
-*   **Heroicons (via custom SVG components):** Used for iconography.
+2.  **IIS (Índice de Impacto Social):**
+    *   `IIS = 0.5 * IAAL_norm + 0.3 * IPCA_norm + 0.2 * ISAC_norm`
+    *   Integra KPIs de beneficio social.
 
-## 6. Setup and Running Locally
+3.  **IDT (Índice de Desarrollo Tecnológico):**
+    *   `IDT = 0.4 * IITSF_norm + 0.3 * ESM_norm + 0.3 * EAD_norm`
+    *   (EAD_norm es un valor conceptual de Eficiencia en Análisis de Datos, fijado en 0.75).
+    *   Evalúa la implementación tecnológica.
 
-This project is set up to run directly from the `index.html` file without a separate build step or development server, thanks to the use of ES Modules via `esm.sh`.
+4.  **IGD (Índice Global de Desempeño):**
+    *   `IGD = 0.35 * ISA + 0.35 * IIS + 0.30 * IDT`
+    *   Proporciona una visión consolidada del rendimiento general de la granja urbana. Es el índice más destacado en el dashboard.
 
-**Prerequisites:**
+Los valores normalizados (`_norm`) de los KPIs base van de 0.25 (Crítico) a 1 (Óptimo), permitiendo su agregación ponderada en los índices compuestos.
 
-*   A modern web browser that supports ES Modules (e.g., Chrome, Firefox, Edge, Safari).
+## Configuración y Uso
 
-**Running the Application:**
+### Carga de Datos (CSV)
 
-1.  **Clone the repository (if applicable) or ensure all files are in the same directory structure.**
-2.  **Open `index.html` directly in your web browser.**
-    *   Navigate to the project directory in your file explorer.
-    *   Double-click `index.html`, or right-click and choose "Open with" your preferred browser.
-3.  **(Alternative) Using a simple HTTP server:**
-    If you encounter issues with direct file access (e.g., CORS for certain local operations, though not expected here), or prefer a server environment:
-    *   Make sure you have Node.js installed (which includes `npx`).
-    *   Navigate to the project's root directory in your terminal.
-    *   Run a simple HTTP server. For example:
-        ```bash
-        npx serve .
+1.  Haga clic en el botón "Cargar CSV".
+2.  Seleccione un archivo `.csv` de su sistema.
+3.  El formato del CSV debe ser:
+    *   Cabecera (primera línea, ignorada): `kpi_id,date,value`
+    *   Datos:
+        *   `kpi_id`: Identificador del KPI (ej. `eua`).
+        *   `date`: Fecha en formato `YYYY-MM-DD`.
+        *   `value`: Valor numérico del KPI (usar `.` como separador decimal).
+    *   Ejemplo:
+        ```csv
+        kpi_id,date,value
+        eua,2024-01-01,3.5
+        eua,2024-01-02,3.2
+        per,2024-01-01,75.0
         ```
-        Or, if you have Python installed:
-        ```bash
-        python -m http.server
-        ```
-    *   The terminal will output a local URL (e.g., `http://localhost:3000` or `http://localhost:8000`). Open this URL in your browser. The prompt specifically asked for `http://localhost:8080`, so if using `serve`, you can specify the port: `npx serve . -l 8080`.
+4.  Los datos cargados se añadirán (o actualizarán si la fecha ya existe para ese KPI) a los datos históricos.
+5.  Un botón "Ayuda CSV" proporciona esta información en un modal.
 
-The application should now be running, displaying the Urban Farm KPI Dashboard.
+### Generación de Datos Aleatorios
 
-## 7. UI Features
+*   Haga clic en el botón "Generar Datos Aleatorios" para reemplazar los datos históricos actuales con un nuevo conjunto de datos de ejemplo para todos los KPIs base. Esto es útil para demostraciones rápidas.
 
-*   **Real-time Updates:** KPI cards and messages update instantly as input values are changed.
-*   **Clear Visual Hierarchy:** Sections are clearly delineated with titles and icons.
-*   **Performance Levels:** Each KPI and composite index displays its current level (e.g., Óptimo, Aceptable, Crítico) with corresponding color coding.
-*   **Descriptive Messages:** Actionable messages and insights are provided for each performance level.
-*   **Icons:** Each KPI, composite index, and section title is accompanied by a relevant icon for quick visual identification.
-*   **Progress Bars:** Percentage-based KPIs (like PER, IRR) include a simple visual bar indicating their value, also color-coded by performance.
-*   **Dark Mode:** A toggle button allows users to switch between light and dark themes. The theme preference is also detected from the operating system's settings on initial load.
-*   **Responsive Design:** The layout adjusts for optimal viewing on various devices (desktops, tablets, mobiles) using Tailwind CSS.
+### Configuración de Umbrales
 
-## 8. Potential Future Enhancements
+1.  En cada tarjeta de KPI (base o compuesto), haga clic en el icono de engranaje (Configurar).
+2.  Se abrirá un modal donde podrá ingresar los nuevos valores para los umbrales de rendimiento (Óptimo, Aceptable, Requiere Atención).
+3.  Los campos mostrados se adaptan según si para ese KPI "más alto es mejor" o "más bajo es mejor". Los KPIs compuestos siempre son "más alto es mejor".
+4.  Haga clic en "Guardar Cambios". Esto actualizará el estado del KPI y las líneas de referencia en su gráfico.
 
-*   **Data Persistence:** Store user inputs locally (e.g., using `localStorage`) or connect to a backend database.
-*   **Historical Data & Charting:** Allow users to track KPI performance over time and visualize trends using charts.
-*   **User Authentication:** For multi-user or personalized dashboard experiences.
-*   **Advanced Alert System:** Implement more sophisticated notifications (e.g., email alerts for critical KPI levels).
-*   **More Granular KPI Inputs:** Allow for more detailed data entry for complex KPIs.
-*   **Customizable Thresholds:** Enable users to adjust KPI performance thresholds based on specific farm goals.
-*   **Export/Import Data:** Allow users to export their KPI data or import data from other sources.
+### Filtrado por Fechas
+
+*   Utilice los selectores de "Fecha Inicio" y "Fecha Fin" en la parte superior del dashboard para filtrar los datos históricos mostrados en los gráficos de todos los KPIs.
+
+### Visualización de Detalles y Fórmulas
+
+*   **Fórmula:** Haga clic en el icono de documento en cualquier tarjeta de KPI para ver su fórmula de cálculo y una breve explicación.
+*   **Expandir:** Haga clic en el icono de expandir en cualquier tarjeta de KPI para abrir una vista modal más grande con más detalles y un gráfico de tendencia ampliado.
+
+## Flujo de Datos
+
+El flujo de datos en la aplicación sigue un patrón unidireccional típico de React, gestionado principalmente en `App.tsx`. A continuación, se presenta un diagrama simplificado:
+
+```mermaid
+graph TD
+    subgraph "User Interaction & Display"
+        A[UI: Dashboard, Cards, Modals]
+        G[TrendChart.tsx]
+    end
+
+    subgraph "Application Core"
+        B[App.tsx <br/> (State, Core Logic, Derived Data)]
+        C[constants.ts <br/> (Initial KPIs)]
+        D[logic/calculations.ts <br/> (Business Logic)]
+        H[Modal Components <br/> (Formula, Config, Expand, Help)]
+    end
+
+    subgraph "Display Components"
+        E[Dashboard.tsx <br/> (Layout & Prop Drilling)]
+        F[KPI Cards <br/> (KpiCard/CompositeKpiCard)]
+    end
+
+    %% Initialization
+    C -- Initial KPI Data --> B;
+
+    %% User Actions
+    A -- User Input/Events <br/> (CSV Upload, Config KPI, Date Filters, Open Modals) --> B;
+
+    %% State Updates & Logic
+    B -- Updates State <br/> (kpis, thresholds, dates) --> B;
+    B -- Uses Functions --> D;
+    D -- Provides Calculation Logic --> B;
+    B -- Calculates Derived Data <br/> (filteredKpis, compositeKpis) --> B;
+
+    %% Data Flow to UI
+    B -- Passes Data & Handlers --> E;
+    E -- Distributes Data & Handlers --> F;
+    F -- Passes Data to --> G;
+    G -- Renders Chart --> A;
+
+    %% Modals
+    B -- Controls & Passes Data to --> H;
+    H -- User Input from Modals <br/> (e.g., Save Thresholds) --> B;
+
+    %% Visual Feedback (Implicitly through component rendering)
+    F -- Displays KPI Info --> A;
+    H -- Displays Modal Info --> A;
+```
+
+## Cómo Ejecutar
+
+Esta es una aplicación frontend estática.
+1.  Asegúrese de tener todos los archivos (`index.html`, `index.tsx`, `*.ts`, `*.tsx` en sus respectivas carpetas) en la misma estructura de directorios.
+2.  Abra el archivo `index.html` directamente en un navegador web moderno que soporte módulos ES6 y las APIs utilizadas.
+3.  Alternativamente, puede servir la carpeta raíz del proyecto usando un servidor web simple (ej. `npx serve .` o Live Server en VSCode).
+
+No hay un proceso de compilación complejo involucrado ya que los imports de React/Recharts se manejan a través de `esm.sh` en el `index.html` y Tailwind CSS se incluye vía CDN.
+
+## Notas Adicionales
+
+*   La aplicación está diseñada para ser educativa y demostrativa, mostrando cómo se pueden rastrear y analizar métricas de sostenibilidad en el contexto de las granjas urbanas.
+*   Las fórmulas y ponderaciones de los KPIs compuestos se basan en el proyecto de investigación mencionado.
+*   La persistencia de los datos (KPIs, umbrales) es solo durante la sesión del navegador. Al recargar la página, se restablecerán los valores iniciales (a menos que se vuelvan a cargar datos desde CSV).
+```

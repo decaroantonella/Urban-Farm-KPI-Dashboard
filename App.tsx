@@ -1,212 +1,363 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { KpiInputValues, KpiResult, CompositeIndexResult, KpiId, KpiDefinition, CompositeIndexDefinition, KpiDirectInputValues } from './types';
-import { KPI_DEFINITIONS } from './constants/kpiDefinitions';
-import { COMPOSITE_INDEX_DEFINITIONS } from './constants/compositeIndexDefinitions';
-import { evaluateKpi, calculateCompositeIndexValue, evaluateCompositeIndex } from './utils/evaluationHelpers';
-import KpiCard from './components/KpiCard';
-import SectionTitle from './components/SectionTitle';
-import { FarmHeaderIcon, EnvironmentalIcon, SocialImpactIcon, TechDevIcon, GlobalPerformanceIcon } from './components/Icons';
 
-// Initial data for "Unidad de Trabajo" prototype, aiming for "Aceptable" or "Bueno"
-const initialInputValues: KpiInputValues = {
-  // EUA
-  aguaUtilizadaTotal: 280, // L/month for 100kg production
-  produccionTotal: 100,    // kg/month
-  // PER
-  energiaRenovableGenerada: 85, // kWh
-  energiaConsumoTotal: 100,    // kWh
-  // IRR
-  residuosReciclados: 90,    // kg
-  residuosGeneradosTotal: 100, // kg
-  // IIC (uses produccionTotal from EUA)
-  emisionesCO2Eq: 80,       // kg CO2eq for 100kg production
-  // AAL
-  poblacionConAccesoLocal: 35,
-  poblacionTotalAreaInfluencia: 50,
-  // IPCA
-  participantesActivosMensuales: 15,
-  capacidadTotalParticipacion: 20,
-  // ICS
-  parametrosSueloOptimos: 88,
-  parametrosSueloMedidosTotal: 100,
-  // IITSF
-  inversionTecnologiasSmart: 1800, 
-  presupuestoOperativoAnual: 10000,
-  // IRA
-  usoActualAgroquimicos: 3, 
-  usoBaseAgroquimicos: 10,  
-  // ISAC
-  lotesCumplenEstandares: 97,
-  lotesProducidosTotal: 100,
-  // Direct Inputs for some KPIs/Indices
-  disponibilidadSistemaMonitoreo: 97, // For ESM (%),
-  eficienciaAnalisisDatos: 0.75, // For EAD_norm (0-1)
-};
+import React, { useState, useCallback, useMemo, ChangeEvent } from 'react';
+import Dashboard from './components/Dashboard';
+import FormulaModal from './components/FormulaModal';
+import ExpandedKpiModal from './components/ExpandedKpiModal';
+import HelpModal from './components/HelpModal';
+import ThresholdConfigModal from './components/ThresholdConfigModal'; // Import ThresholdConfigModal
+import { INITIAL_KPIS } from './constants';
+import { Kpi, KpiThresholds, CompositeKpi, HistoricalDataPoint } from './types';
+import { calculateIsa, calculateIis, calculateIdt, calculateIgd, getCompositeKpiStatus } from './logic/calculations';
+import { getKpiFormulaExplanation, getCompositeKpiFormulaExplanation } from './logic/formulas';
+
+// Import icons for composite KPIs
+import { SoilHealthIcon } from './components/icons/SoilHealthIcon';
+import { CommunityIcon } from './components/icons/CommunityIcon';
+import { TechInvestmentIcon } from './components/icons/TechInvestmentIcon';
+import { CogIcon } from './components/icons/CogIcon';
+
+
+const getDefaultCompositeThresholds = (): Record<string, KpiThresholds> => ({
+  'isa': { optimalMin: 0.9, acceptableMin: 0.75, attentionMin: 0.6 },
+  'iis': { optimalMin: 0.85, acceptableMin: 0.7, attentionMin: 0.5 },
+  'idt': { optimalMin: 0.85, acceptableMin: 0.7, attentionMin: 0.5 },
+  'igd': { optimalMin: 0.80, acceptableMin: 0.65, attentionMin: 0.50 },
+});
 
 
 const App: React.FC = () => {
-  const [inputValues, setInputValues] = useState<KpiInputValues>(initialInputValues);
-  const [kpiResults, setKpiResults] = useState<Record<KpiId, KpiResult>>({} as Record<KpiId, KpiResult>);
-  const [compositeIndexResults, setCompositeIndexResults] = useState<Record<string, CompositeIndexResult>>({});
-  const [darkMode, setDarkMode] = useState(false);
-
-  useEffect(() => {
-    if (typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      setDarkMode(true);
-      document.documentElement.classList.add('dark');
-    }
-  }, []);
-
-  const toggleDarkMode = () => {
-    setDarkMode(!darkMode);
-    document.documentElement.classList.toggle('dark');
-  };
-
-  const handleInputChange = useCallback((kpiId: keyof KpiInputValues, value: string | number) => {
-    setInputValues(prev => ({ ...prev, [kpiId]: typeof value === 'string' ? parseFloat(value) || 0 : value }));
-  }, []);
-
-  useEffect(() => {
-    // 1. Calculate KPI Results
-    const currentKpiResults = {} as Record<KpiId, KpiResult>;
-    KPI_DEFINITIONS.forEach(def => {
-      let value: number | undefined;
-      if (def.calculate) {
-        value = def.calculate(inputValues);
-      } else if (def.directInputKey) {
-         value = inputValues[def.directInputKey as keyof KpiDirectInputValues] as number;
-      }
-      if (value !== undefined) {
-        currentKpiResults[def.id] = evaluateKpi(def, value);
-      }
-    });
-    setKpiResults(currentKpiResults);
-
-    // 2. Prepare scores for composite indices
-    const kpiScoresForComposites: Partial<Record<KpiId, number>> =
-        Object.fromEntries(
-            Object.entries(currentKpiResults).map(([id, result]) => [id as KpiId, result.score ?? 0])
-        );
-    
-    // For IDT, we need EAD_norm and ESM_norm (which is score from ESM KPI)
-    const scoresForIdt: Partial<Record<KpiId | 'EAD_norm' | 'ESM_norm', number>> = {
-        ...kpiScoresForComposites, // includes IITSF score
-    };
-    if (currentKpiResults.ESM) {
-        scoresForIdt.ESM_norm = currentKpiResults.ESM.score ?? 0;
-    }
-    if (inputValues.eficienciaAnalisisDatos !== undefined) {
-        scoresForIdt.EAD_norm = inputValues.eficienciaAnalisisDatos; // EAD_norm is directly 0-1
-    }
-
-
-    // 3. Calculate Composite Indices in stages
-    const currentCompositeResultsData = {} as Record<string, CompositeIndexResult>;
-
-    COMPOSITE_INDEX_DEFINITIONS.forEach(def => {
-        if (def.id === 'ISA' || def.id === 'IIS') {
-            const value = calculateCompositeIndexValue(def, kpiScoresForComposites, {});
-            currentCompositeResultsData[def.id] = evaluateCompositeIndex(def, value);
-        } else if (def.id === 'IDT') {
-            const value = calculateCompositeIndexValue(def, scoresForIdt, {});
-            currentCompositeResultsData[def.id] = evaluateCompositeIndex(def, value);
-        }
-    });
-    
-    const igdDef = COMPOSITE_INDEX_DEFINITIONS.find(def => def.id === 'IGD');
-    if (igdDef) {
-        const value = calculateCompositeIndexValue(igdDef, {}, currentCompositeResultsData); // IGD only needs other composite scores
-        currentCompositeResultsData[igdDef.id] = evaluateCompositeIndex(igdDef, value);
-    }
-    
-    setCompositeIndexResults(currentCompositeResultsData);
-
-  }, [inputValues]);
-
-  const renderKpiSection = (title: string, kpiDefs: KpiDefinition[], icon?: React.ReactNode) => (
-    <div className="mb-12">
-      <SectionTitle title={title} icon={icon} />
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {kpiDefs.map(def => (
-          <KpiCard
-            key={def.id}
-            definition={def}
-            inputValues={inputValues}
-            onInputChange={handleInputChange}
-            result={kpiResults[def.id]}
-          />
-        ))}
-      </div>
-    </div>
+  const [kpis, setKpis] = useState<Kpi[]>(INITIAL_KPIS);
+  const [compositeKpiUserThresholds, setCompositeKpiUserThresholds] = useState<Record<string, KpiThresholds>>(
+    getDefaultCompositeThresholds()
   );
 
+  const [isFormulaModalOpen, setIsFormulaModalOpen] = useState(false);
+  const [selectedItemForFormula, setSelectedItemForFormula] = useState<Kpi | CompositeKpi | null>(null);
+  
+  const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
+  const [selectedItemForConfig, setSelectedItemForConfig] = useState<Kpi | CompositeKpi | null>(null);
+
+  const [isExpandedModalOpen, setIsExpandedModalOpen] = useState(false);
+  const [selectedItemForExpansion, setSelectedItemForExpansion] = useState<Kpi | CompositeKpi | null>(null);
+  
+  const [startDate, setStartDate] = useState<string>('');
+  const [endDate, setEndDate] = useState<string>('');
+  const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
+
+
+  const handleSaveThresholds = useCallback((itemId: string, newThresholds: KpiThresholds, itemType: 'kpi' | 'composite') => {
+    if (itemType === 'kpi') {
+      setKpis(prevKpis =>
+        prevKpis.map(kpi =>
+          kpi.id === itemId ? { ...kpi, thresholds: newThresholds } : kpi
+        )
+      );
+    } else { // composite
+      setCompositeKpiUserThresholds(prev => ({
+        ...prev,
+        [itemId]: newThresholds,
+      }));
+    }
+  }, []);
+
+
+  const filteredKpis = useMemo(() => {
+    if (!startDate && !endDate) {
+      return kpis;
+    }
+    return kpis.map(kpi => ({
+      ...kpi,
+      historicalData: kpi.historicalData.filter(dp => {
+        const date = new Date(dp.date);
+        const start = startDate ? new Date(startDate) : null;
+        const end = endDate ? new Date(endDate) : null;
+        if (start && date < start) return false;
+        if (end) {
+            const adjustedEnd = new Date(end);
+            adjustedEnd.setDate(adjustedEnd.getDate() + 1); // Include the end date itself
+            if (date >= adjustedEnd) return false;
+        }
+        return true;
+      }),
+    }));
+  }, [kpis, startDate, endDate]);
+
+
+  const compositeKpis = useMemo((): CompositeKpi[] => {
+    const allDates = new Set<string>();
+    kpis.forEach(kpi => kpi.historicalData.forEach(dp => allDates.add(dp.date)));
+    const sortedDates = Array.from(allDates).sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
+
+    const isaHistorical: HistoricalDataPoint[] = [];
+    const iisHistorical: HistoricalDataPoint[] = [];
+    const idtHistorical: HistoricalDataPoint[] = [];
+    const igdHistorical: HistoricalDataPoint[] = [];
+
+    for (const date of sortedDates) {
+      const kpisAtDate: Kpi[] = kpis.map(baseKpi => {
+        const dataPoint = baseKpi.historicalData.find(dp => dp.date === date);
+        return {
+          ...baseKpi,
+          currentValue: dataPoint ? dataPoint.value : NaN,
+        };
+      });
+
+      const isaValueOnDate = calculateIsa(kpisAtDate);
+      if (!isNaN(isaValueOnDate)) {
+        isaHistorical.push({ date, value: isaValueOnDate });
+      }
+
+      const iisValueOnDate = calculateIis(kpisAtDate);
+      if (!isNaN(iisValueOnDate)) {
+        iisHistorical.push({ date, value: iisValueOnDate });
+      }
+
+      const idtValueOnDate = calculateIdt(kpisAtDate);
+      if (!isNaN(idtValueOnDate)) {
+        idtHistorical.push({ date, value: idtValueOnDate });
+      }
+      
+      if (!isNaN(isaValueOnDate) && !isNaN(iisValueOnDate) && !isNaN(idtValueOnDate)) {
+        const igdValueOnDate = calculateIgd(isaValueOnDate, iisValueOnDate, idtValueOnDate);
+        if (!isNaN(igdValueOnDate)) {
+          igdHistorical.push({ date, value: igdValueOnDate });
+        }
+      }
+    }
+
+    const getCurrentCompositeValue = (historical: HistoricalDataPoint[], calculationFunc: (k: Kpi[]) => number) => {
+      if (historical.length > 0) {
+        return historical[historical.length - 1].value;
+      }
+      const calculatedOverall = calculationFunc(kpis);
+      return isNaN(calculatedOverall) ? 0 : calculatedOverall;
+    };
+    
+    const currentIsa = getCurrentCompositeValue(isaHistorical, calculateIsa);
+    const currentIis = getCurrentCompositeValue(iisHistorical, calculateIis);
+    const currentIdt = getCurrentCompositeValue(idtHistorical, calculateIdt);
+    const currentIgd = igdHistorical.length > 0 ? igdHistorical[igdHistorical.length - 1].value : calculateIgd(currentIsa, currentIis, currentIdt);
+
+    const defaultThresholds = getDefaultCompositeThresholds();
+
+    return [
+      {
+        id: 'isa',
+        name: 'Índice de Sostenibilidad Ambiental (ISA)',
+        value: currentIsa,
+        status: getCompositeKpiStatus(currentIsa, 'standard'),
+        description: 'Integra KPIs relacionados con el impacto ambiental directo de las operaciones.',
+        // FIX: Apply type assertion for icon
+        icon: SoilHealthIcon as React.FC<React.SVGProps<SVGSVGElement>>,
+        historicalData: isaHistorical,
+        unit: 'Índice',
+        thresholds: compositeKpiUserThresholds['isa'] || defaultThresholds['isa'],
+        valueInterpretation: 'higherIsBetter',
+      },
+      {
+        id: 'iis',
+        name: 'Índice de Impacto Social (IIS)',
+        value: currentIis,
+        status: getCompositeKpiStatus(currentIis, 'standard'),
+        description: 'Integra indicadores relacionados con el beneficio social directo que la granja aporta a su comunidad.',
+        // FIX: Apply type assertion for icon
+        icon: CommunityIcon as React.FC<React.SVGProps<SVGSVGElement>>,
+        historicalData: iisHistorical,
+        unit: 'Índice',
+        thresholds: compositeKpiUserThresholds['iis'] || defaultThresholds['iis'],
+        valueInterpretation: 'higherIsBetter',
+      },
+      {
+        id: 'idt',
+        name: 'Índice de Desarrollo Tecnológico (IDT)',
+        value: currentIdt,
+        status: getCompositeKpiStatus(currentIdt, 'standard'),
+        description: 'Evalúa el nivel de implementación, efectividad y actualización de las tecnologías de smart farming.',
+        // FIX: Apply type assertion for icon
+        icon: TechInvestmentIcon as React.FC<React.SVGProps<SVGSVGElement>>,
+        historicalData: idtHistorical,
+        unit: 'Índice',
+        thresholds: compositeKpiUserThresholds['idt'] || defaultThresholds['idt'],
+        valueInterpretation: 'higherIsBetter',
+      },
+      {
+        id: 'igd',
+        name: 'Índice Global de Desempeño (IGD)',
+        value: isNaN(currentIgd) ? 0 : currentIgd,
+        status: getCompositeKpiStatus(currentIgd, 'global'),
+        description: 'Integra los tres índices compuestos (ISA, IIS, IDT) para una visión consolidada del rendimiento general.',
+        // FIX: Apply type assertion for icon
+        icon: CogIcon as React.FC<React.SVGProps<SVGSVGElement>>,
+        historicalData: igdHistorical,
+        unit: 'Índice',
+        thresholds: compositeKpiUserThresholds['igd'] || defaultThresholds['igd'],
+        valueInterpretation: 'higherIsBetter',
+      }
+    ];
+  }, [kpis, compositeKpiUserThresholds]); 
+
+  const handleOpenFormulaModal = useCallback((item: Kpi | CompositeKpi) => {
+    setSelectedItemForFormula(item);
+    setIsFormulaModalOpen(true);
+  }, []);
+
+  const handleCloseFormulaModal = useCallback(() => {
+    setIsFormulaModalOpen(false);
+    setSelectedItemForFormula(null);
+  }, []);
+
+  const handleOpenConfigModal = useCallback((item: Kpi | CompositeKpi) => {
+    setSelectedItemForConfig(item);
+    setIsConfigModalOpen(true);
+  }, []);
+
+  const handleCloseConfigModal = useCallback(() => {
+    setIsConfigModalOpen(false);
+    setSelectedItemForConfig(null);
+  }, []);
+
+  const handleOpenExpandedModal = useCallback((item: Kpi | CompositeKpi) => {
+    setSelectedItemForExpansion(item);
+    setIsExpandedModalOpen(true);
+  }, []);
+
+  const handleCloseExpandedModal = useCallback(() => {
+    setIsExpandedModalOpen(false);
+    setSelectedItemForExpansion(null);
+  }, []);
+
+
+  const getFormulaContent = () => {
+    if (!selectedItemForFormula) return '';
+    if ('category' in selectedItemForFormula) { 
+      return getKpiFormulaExplanation(selectedItemForFormula as Kpi);
+    } else { 
+      return getCompositeKpiFormulaExplanation(selectedItemForFormula as CompositeKpi, kpis);
+    }
+  };
+
+  const handleFileUpload = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const text = e.target?.result as string;
+        try {
+          const newHistoricalDataMap: { [kpiId: string]: HistoricalDataPoint[] } = {};
+          const lines = text.split(/\r\n|\n/).slice(1); 
+
+          lines.forEach(line => {
+            const [kpiId, dateStr, valueStr] = line.split(',');
+            if (kpiId && dateStr && valueStr) {
+              const value = parseFloat(valueStr);
+              if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr) || isNaN(value)) {
+                console.warn(`Skipping invalid line: ${line}`);
+                return;
+              }
+              const trimmedKpiId = kpiId.trim();
+              if (!newHistoricalDataMap[trimmedKpiId]) {
+                newHistoricalDataMap[trimmedKpiId] = [];
+              }
+              newHistoricalDataMap[trimmedKpiId].push({ date: dateStr.trim(), value });
+            }
+          });
+          
+          setKpis(prevKpis =>
+            prevKpis.map(kpi => {
+              if (newHistoricalDataMap[kpi.id]) {
+                const combinedData = [...kpi.historicalData, ...newHistoricalDataMap[kpi.id]];
+                combinedData.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+                const uniqueData = Array.from(new Map(combinedData.map(item => [item.date, item])).values());
+                const newCurrentValue = uniqueData.length > 0 ? uniqueData[uniqueData.length - 1].value : kpi.currentValue;
+                return { ...kpi, historicalData: uniqueData, currentValue: newCurrentValue };
+              }
+              return kpi;
+            })
+          );
+          alert('Datos CSV cargados exitosamente!');
+        } catch (error) {
+          console.error("Error parsing CSV:", error);
+          alert('Error al procesar el archivo CSV. Verifique el formato y el contenido.');
+        }
+      };
+      reader.readAsText(file);
+      event.target.value = ''; 
+    }
+  };
+  
+  const generateRandomData = () => {
+    setKpis(INITIAL_KPIS.map(initialKpi => {
+        const newHistoricalData = Array.from({ length: 30 }, (_, i) => {
+            const date = new Date();
+            date.setDate(date.getDate() - (29 - i));
+            const baseValue = INITIAL_KPIS.find(ik => ik.id === initialKpi.id)?.currentValue || 50;
+            return {
+              date: date.toISOString().split('T')[0],
+              value: parseFloat((baseValue * (0.8 + Math.random() * 0.4)).toFixed(2)),
+            };
+          });
+        return {
+            ...initialKpi, 
+            historicalData: newHistoricalData,
+            currentValue: newHistoricalData.length > 0 ? newHistoricalData[newHistoricalData.length - 1].value : initialKpi.currentValue,
+        };
+    }));
+    alert('Nuevos datos aleatorios generados.');
+  };
+
+  const handleOpenHelpModal = () => setIsHelpModalOpen(true);
+  const handleCloseHelpModal = () => setIsHelpModalOpen(false);
+
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-farm-dark-bg text-gray-900 dark:text-farm-dark-text p-4 sm:p-8 transition-colors duration-300">
-      <header className="mb-10 text-center">
-        <FarmHeaderIcon className="w-20 h-20 mx-auto text-farm-primary dark:text-farm-accent mb-4" />
-        <h1 className="text-4xl sm:text-5xl font-bold text-farm-primary dark:text-farm-accent">
-          Urban Farm KPI Dashboard
-        </h1>
-        <p className="text-lg text-gray-600 dark:text-gray-300 mt-2">
-          Estudio del impacto de las granjas urbanas en ciudades inteligentes.
-        </p>
-         <button
-            onClick={toggleDarkMode}
-            className="mt-6 px-6 py-2 bg-farm-secondary dark:bg-farm-primary text-white font-semibold rounded-lg shadow-md hover:opacity-90 transition-all duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-farm-accent focus:ring-opacity-50"
-          >
-            <span className="mr-2">{darkMode ? '☀️' : '🌙'}</span>
-            Modo {darkMode ? 'Claro' : 'Oscuro'}
-          </button>
-      </header>
-
-      <main>
-        {renderKpiSection(
-          'Sostenibilidad Ambiental',
-          KPI_DEFINITIONS.filter(k => ['EUA', 'PER', 'IRR', 'IIC'].includes(k.id)),
-          <EnvironmentalIcon className="w-8 h-8 mr-3 text-green-500" />
-        )}
-        {renderKpiSection(
-          'Impacto Social',
-          KPI_DEFINITIONS.filter(k => ['AAL', 'IPCA', 'ISAC'].includes(k.id)),
-          <SocialImpactIcon className="w-8 h-8 mr-3 text-blue-500" />
-        )}
-        {renderKpiSection(
-          'Desarrollo y Operación Tecnológica',
-          KPI_DEFINITIONS.filter(k => ['ICS', 'IITSF', 'IRA', 'ESM', 'EAD'].includes(k.id)),
-          <TechDevIcon className="w-8 h-8 mr-3 text-purple-500" />
-        )}
-
-        <div className="mb-12">
-          <SectionTitle title="Índices Compuestos Globales" icon={<GlobalPerformanceIcon className="w-8 h-8 mr-3 text-orange-500" />} />
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {COMPOSITE_INDEX_DEFINITIONS.map(def => (
-              <KpiCard
-                key={def.id}
-                definition={def}
-                result={compositeIndexResults[def.id]}
-                isComposite={true}
-              />
-            ))}
-          </div>
-        </div>
-        
-        <div className="mt-12 p-6 bg-white dark:bg-farm-dark-card shadow-xl rounded-lg">
-          <h3 className="text-2xl font-semibold text-farm-primary dark:text-farm-accent mb-4">Nota sobre la Unidad de Trabajo Prototipo</h3>
-          <p className="text-gray-700 dark:text-gray-300">
-            Los valores iniciales representan una "Unidad de Trabajo" prototipo con un desempeño generalmente aceptable.
-            Modifique los valores de entrada para los KPIs individuales y observe cómo cambian los indicadores y las alertas.
-            Esta herramienta está diseñada para ayudar a visualizar el impacto de diferentes factores operativos.
-            Producción mensual base asumida: 100 kg.
-          </p>
-        </div>
-      </main>
-
-      <footer className="text-center mt-12 py-6 border-t border-gray-300 dark:border-gray-700">
-        <p className="text-sm text-gray-500 dark:text-gray-400">
-          &copy; {new Date().getFullYear()} Urban Farm KPI Dashboard. Basado en el modelo de evaluación propuesto.
-        </p>
+    <div className="min-h-screen bg-slate-900">
+      <Dashboard
+        kpis={filteredKpis} 
+        compositeKpis={compositeKpis}
+        onOpenFormulaModal={handleOpenFormulaModal}
+        onOpenConfigModal={handleOpenConfigModal} // Pass new handler
+        onOpenExpandedModal={handleOpenExpandedModal} // Pass new handler
+        onFileUpload={handleFileUpload}
+        onGenerateRandomData={generateRandomData}
+        startDate={startDate}
+        setStartDate={setStartDate}
+        endDate={endDate}
+        setEndDate={setEndDate}
+        onOpenHelpModal={handleOpenHelpModal}
+      />
+      <footer className="text-center py-8 text-slate-500 text-sm">
+        <p>Basado en el Proyecto Integrador para la obtención del Título de Grado Ingeniero Electrónico.</p>
+        <p>Universidad Nacional de Córdoba.</p>
       </footer>
+      {isFormulaModalOpen && selectedItemForFormula && (
+        <FormulaModal
+          isOpen={isFormulaModalOpen}
+          onClose={handleCloseFormulaModal}
+          title={`Fórmula de Cálculo: ${selectedItemForFormula.name}`}
+          formulaContent={getFormulaContent()}
+        />
+      )}
+      {isConfigModalOpen && selectedItemForConfig && (
+        <ThresholdConfigModal
+          isOpen={isConfigModalOpen}
+          onClose={handleCloseConfigModal}
+          item={selectedItemForConfig}
+          onSave={handleSaveThresholds}
+        />
+      )}
+      {isExpandedModalOpen && selectedItemForExpansion && (
+        <ExpandedKpiModal
+          isOpen={isExpandedModalOpen}
+          onClose={handleCloseExpandedModal}
+          item={selectedItemForExpansion}
+        />
+      )}
+      {isHelpModalOpen && (
+        <HelpModal
+          isOpen={isHelpModalOpen}
+          onClose={handleCloseHelpModal}
+        />
+      )}
     </div>
   );
 };

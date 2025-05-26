@@ -1,5 +1,5 @@
 {
-  "name": "urban-farm-kpi-dashboard",
+  "name": "dashboard-de-kpis-para-granjas-urbanas",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -9,8 +9,10 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "react": "^19.1.0",
-    "react-dom": "^19.1.0"
+    "react": "18.2.0",
+    "react-dom/client": "18.2.0",
+    "recharts": "2.12.7?deps=react@18.2.0,react-dom@18.2.0",
+    "react-dom": "18.2.0"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",
