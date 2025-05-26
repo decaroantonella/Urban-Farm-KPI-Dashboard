@@ -165,28 +165,37 @@ graph TD
     end
 
     subgraph "Application Core"
-        B[App.tsx <br/> (State, Core Logic, Derived Data)]
-        C[constants.ts <br/> (Initial KPIs)]
-        D[logic/calculations.ts <br/> (Business Logic)]
-        H[Modal Components <br/> (Formula, Config, Expand, Help)]
+        B["App.tsx
+(State, Core Logic, Derived Data)"]
+        C["constants.ts
+(Initial KPIs)"]
+        D["logic/calculations.ts
+(Business Logic)"]
+        H["Modal Components
+(Formula, Config, Expand, Help)"]
     end
 
     subgraph "Display Components"
-        E[Dashboard.tsx <br/> (Layout & Prop Drilling)]
-        F[KPI Cards <br/> (KpiCard/CompositeKpiCard)]
+        E["Dashboard.tsx
+(Layout & Prop Drilling)"]
+        F["KPI Cards
+(KpiCard/CompositeKpiCard)"]
     end
 
     %% Initialization
     C -- Initial KPI Data --> B;
 
     %% User Actions
-    A -- User Input/Events <br/> (CSV Upload, Config KPI, Date Filters, Open Modals) --> B;
+    A -- "User Input/Events
+(CSV Upload, Config KPI, Date Filters, Open Modals)" --> B;
 
     %% State Updates & Logic
-    B -- Updates State <br/> (kpis, thresholds, dates) --> B;
+    B -- "Updates State
+(kpis, thresholds, dates)" --> B;
     B -- Uses Functions --> D;
     D -- Provides Calculation Logic --> B;
-    B -- Calculates Derived Data <br/> (filteredKpis, compositeKpis) --> B;
+    B -- "Calculates Derived Data
+(filteredKpis, compositeKpis)" --> B;
 
     %% Data Flow to UI
     B -- Passes Data & Handlers --> E;
@@ -196,7 +205,8 @@ graph TD
 
     %% Modals
     B -- Controls & Passes Data to --> H;
-    H -- User Input from Modals <br/> (e.g., Save Thresholds) --> B;
+    H -- "User Input from Modals
+(e.g., Save Thresholds)" --> B;
 
     %% Visual Feedback (Implicitly through component rendering)
     F -- Displays KPI Info --> A;
@@ -217,4 +227,5 @@ No hay un proceso de compilación complejo involucrado ya que los imports de Rea
 *   La aplicación está diseñada para ser educativa y demostrativa, mostrando cómo se pueden rastrear y analizar métricas de sostenibilidad en el contexto de las granjas urbanas.
 *   Las fórmulas y ponderaciones de los KPIs compuestos se basan en el proyecto de investigación mencionado.
 *   La persistencia de los datos (KPIs, umbrales) es solo durante la sesión del navegador. Al recargar la página, se restablecerán los valores iniciales (a menos que se vuelvan a cargar datos desde CSV).
+
 ```
