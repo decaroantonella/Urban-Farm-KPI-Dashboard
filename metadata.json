@@ -2,5 +2,4 @@
   "name": "Dashboard de KPIs para Granjas Urbanas",
   "description": "A React application to visualize and configure Key Performance Indicators (KPIs) for urban farms, based on sustainability metrics. It allows users to monitor environmental sustainability KPIs, view their historical trends, and adjust performance thresholds.",
   "requestFramePermissions": [],
-  "prompt": ""
 }
