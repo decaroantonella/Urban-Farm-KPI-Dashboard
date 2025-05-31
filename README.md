@@ -13,7 +13,8 @@ Esta aplicación es un dashboard interactivo diseñado para visualizar y configu
 
 Este proyecto fue desarrollado como parte de una tesis. Puedes encontrar el documento completo en formato PDF en el siguiente enlace:
 
-📄 **[Descargar/Ver Tesis del Proyecto (PDF)](docs/tesis_proyecto_dashboard.pdf)**
+📄 **[Descargar/Ver Proyecto Integrador sobre ESTUDIO DEL IMPACTO DE LAS GRANJAS URBANAS
+EN CIUDADES INTELIGENTES MEDIANTE EL USO DE INDICADORES CLAVES DE DESEMPENO (KPI) (PDF)](docs/tesis_proyecto_dashboard.pdf)**
 
 ## Características Principales
 
