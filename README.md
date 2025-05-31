@@ -224,6 +224,7 @@ graph TD
     F -- Displays KPI Info --> A;
     H -- Displays Modal Info --> A;
 ```
+![Logo](docs/Diagrama_flujo_datos_app.png)
 
 ## Cómo Ejecutar
 
