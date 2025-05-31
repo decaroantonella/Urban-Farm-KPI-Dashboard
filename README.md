@@ -4,6 +4,17 @@
 
 Esta aplicación es un dashboard interactivo diseñado para visualizar y configurar Indicadores Clave de Rendimiento (KPIs) para granjas urbanas, con un enfoque en métricas de sostenibilidad. Permite a los usuarios monitorear KPIs ambientales, sociales y técnico-operacionales, ver sus tendencias históricas, ajustar umbrales de rendimiento y comprender las fórmulas detrás de los cálculos. El objetivo es proporcionar una herramienta para el "Estudio del Impacto de las Granjas Urbanas en Ciudades Inteligentes", basado en el Proyecto Integrador para la obtención del Título de Grado Ingeniero Electrónico de la Universidad Nacional de Córdoba.
 
+## Vista Previa del Dashboard (Demo)
+
+![Demostración del Dashboard](assets/dashboard_demo.gif)
+
+
+## Documentación y Tesis
+
+Este proyecto fue desarrollado como parte de una tesis. Puedes encontrar el documento completo en formato PDF en el siguiente enlace:
+
+📄 **[Descargar/Ver Tesis del Proyecto (PDF)](docs/tesis_proyecto_dashboard.pdf)**
+
 ## Características Principales
 
 *   **Visualización de KPIs:** Muestra KPIs base y KPIs compuestos con valores actuales, descripciones y estados de rendimiento codificados por colores.
