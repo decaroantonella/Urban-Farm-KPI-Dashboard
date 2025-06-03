@@ -179,13 +179,16 @@ export const getCompositeKpiFormulaExplanation = (ckpi: CompositeKpi, kpis: Kpi[
           React.createElement("strong", null, "Fórmula:")
         ),
         React.createElement("p", { className: "italic" },
-          "ISA = 0.4 * EUA", React.createElement("sub", null, "norm"), " + 0.3 * PER", React.createElement("sub", null, "norm"), " + 0.3 * IRR", React.createElement("sub", null, "norm")
+          "ISA = 0.25 * EUA", React.createElement("sub", null, "norm"), " + 0.20 * PER", React.createElement("sub", null, "norm"), " + 0.15 * IRR", React.createElement("sub", null, "norm"), " + 0.15 * IIC", React.createElement("sub", null, "norm"), " + 0.15 * ICS", React.createElement("sub", null, "norm"), " + 0.10 * IRA", React.createElement("sub", null, "norm")
         ),
         React.createElement("p", { className: "mt-2" }, "Donde:"),
         React.createElement("ul", { className: "list-disc list-inside ml-4" },
           React.createElement("li", null, "EUA", React.createElement("sub", null, "norm"), ": Uso Eficiente del Agua (normalizado) = ", getNormValueText('eua')),
           React.createElement("li", null, "PER", React.createElement("sub", null, "norm"), ": Porcentaje Energía Renovable (normalizado) = ", getNormValueText('per')),
-          React.createElement("li", null, "IRR", React.createElement("sub", null, "norm"), ": Índice Reciclaje Residuos (normalizado) = ", getNormValueText('irr'))
+          React.createElement("li", null, "IRR", React.createElement("sub", null, "norm"), ": Índice Reciclaje Residuos (normalizado) = ", getNormValueText('irr')),
+          React.createElement("li", null, "IIC", React.createElement("sub", null, "norm"), ": Emisiones de Carbono (normalizado) = ", getNormValueText('iic')),
+          React.createElement("li", null, "ICS", React.createElement("sub", null, "norm"), ": Salud del Suelo/Medio de Cultivo (normalizado) = ", getNormValueText('ics')),
+          React.createElement("li", null, "IRA", React.createElement("sub", null, "norm"), ": Reducción Uso Pesticidas/Fertilizantes (normalizado) = ", getNormValueText('ira'))
         ),
         React.createElement("p", { className: "mt-2 text-xs" }, "Nota: Los valores normalizados (", React.createElement("sub", null, "norm"), ") van de 0.25 (Crítico) a 1 (Óptimo).")
       );
@@ -211,15 +214,14 @@ export const getCompositeKpiFormulaExplanation = (ckpi: CompositeKpi, kpis: Kpi[
           React.createElement("strong", null, "Fórmula:")
         ),
         React.createElement("p", { className: "italic" },
-          "IDT = 0.4 * IITSF", React.createElement("sub", null, "norm"), " + 0.3 * ESM", React.createElement("sub", null, "norm"), " + 0.3 * EAD", React.createElement("sub", null, "norm")
+          "IDT = 0.5 * IITSF", React.createElement("sub", null, "norm"), " + 0.5 * ESM", React.createElement("sub", null, "norm")
         ),
         React.createElement("p", { className: "mt-2" }, "Donde:"),
         React.createElement("ul", { className: "list-disc list-inside ml-4" },
           React.createElement("li", null, "IITSF", React.createElement("sub", null, "norm"), ": Inversión Tecnologías Smart Farming (normalizado) = ", getNormValueText('iitsf')),
-          React.createElement("li", null, "ESM", React.createElement("sub", null, "norm"), ": Eficiencia Sistema Monitoreo (normalizado) = ", getNormValueText('esm')),
-          React.createElement("li", null, "EAD", React.createElement("sub", null, "norm"), ": Eficiencia en Análisis de Datos (valor conceptual = 0.75)")
+          React.createElement("li", null, "ESM", React.createElement("sub", null, "norm"), ": Eficiencia Sistema Monitoreo (normalizado) = ", getNormValueText('esm'))
         ),
-        React.createElement("p", { className: "mt-2 text-xs" }, "Nota: Los valores normalizados (", React.createElement("sub", null, "norm"), ") van de 0.25 (Crítico) a 1 (Óptimo). EAD", React.createElement("sub", null, "norm"), " es un valor conceptual según Cap. 10.")
+        React.createElement("p", { className: "mt-2 text-xs" }, "Nota: Los valores normalizados (", React.createElement("sub", null, "norm"), ") van de 0.25 (Crítico) a 1 (Óptimo).")
       );
     case 'igd':
       const isaValue = calculateIsa(kpis);

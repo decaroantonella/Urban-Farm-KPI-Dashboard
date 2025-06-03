@@ -1,4 +1,3 @@
-
 import { Kpi, KpiStatus, CompositeKpiStatus, KpiThresholds } from '../types';
 
 export const getKpiStatusDetails = (kpi: Kpi): { status: KpiStatus; color: string } => {
@@ -59,12 +58,15 @@ export const calculateIsa = (kpis: Kpi[]): number => {
   const euaNorm = getNormalizedValue(kpis, 'eua');
   const perNorm = getNormalizedValue(kpis, 'per');
   const irrNorm = getNormalizedValue(kpis, 'irr');
+  const iicNorm = getNormalizedValue(kpis, 'iic');
+  const icsNorm = getNormalizedValue(kpis, 'ics');
+  const iraNorm = getNormalizedValue(kpis, 'ira');
 
-  if (isNaN(euaNorm) || isNaN(perNorm) || isNaN(irrNorm)) {
+  if (isNaN(euaNorm) || isNaN(perNorm) || isNaN(irrNorm) || isNaN(iicNorm) || isNaN(icsNorm) || isNaN(iraNorm)) {
     return NaN; // If any constituent KPI normalized value is NaN, ISA is NaN
   }
   
-  const isa = 0.4 * euaNorm + 0.3 * perNorm + 0.3 * irrNorm;
+  const isa = 0.25 * euaNorm + 0.20 * perNorm + 0.15 * irrNorm + 0.15 * iicNorm + 0.15 * icsNorm + 0.10 * iraNorm;
   return parseFloat(isa.toFixed(2)); // Will propagate NaN if isa is NaN
 };
 
@@ -84,14 +86,12 @@ export const calculateIis = (kpis: Kpi[]): number => {
 export const calculateIdt = (kpis: Kpi[]): number => {
   const iitsfNorm = getNormalizedValue(kpis, 'iitsf');
   const esmNorm = getNormalizedValue(kpis, 'esm');
-  // EADnorm is conceptual. If we had an EAD kpi, we'd use getNormalizedValue(kpis, 'ead_kpi_id')
-  const eadNorm = 0.75; // Placeholder as per original logic, assuming it's always available conceptually
 
-  if (isNaN(iitsfNorm) || isNaN(esmNorm)) { // eadNorm is constant, so only check variable ones
+  if (isNaN(iitsfNorm) || isNaN(esmNorm)) {
     return NaN;
   }
 
-  const idt = 0.4 * iitsfNorm + 0.3 * esmNorm + 0.3 * eadNorm;
+  const idt = 0.5 * iitsfNorm + 0.5 * esmNorm;
   return parseFloat(idt.toFixed(2));
 };
 
