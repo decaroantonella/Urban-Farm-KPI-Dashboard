@@ -1,5 +1,4 @@
-
-
+import React from 'react';
 import { Kpi, HistoricalDataPoint } from './types';
 import { WaterDropIcon } from './components/icons/WaterDropIcon';
 import { EnergyIcon } from './components/icons/EnergyIcon';
@@ -39,7 +38,7 @@ export const INITIAL_KPIS: Kpi[] = [
   // Environmental KPIs
   {
     id: 'eua',
-    name: 'Uso Eficiente del Agua',
+    name: 'Índice de Uso Eficiente del Agua',
     description: 'Mide la cantidad de agua utilizada por kg de producto.',
     unit: 'Lts/Kg',
     currentValue: 2.8,
@@ -56,7 +55,7 @@ export const INITIAL_KPIS: Kpi[] = [
   },
   {
     id: 'per',
-    name: 'Porcentaje de Energía Renovable',
+    name: 'Índice de Porcentaje de Energía Renovable',
     description: 'Mide la proporción de energía renovable utilizada.',
     unit: '%',
     currentValue: 85,
@@ -90,7 +89,7 @@ export const INITIAL_KPIS: Kpi[] = [
   },
   {
     id: 'iic',
-    name: 'Emisiones de Carbono',
+    name: 'Índice de Emisiones de Carbono',
     description: 'Emisiones de CO2eq por kg de producto.',
     unit: 'kgCO2eq/kg',
     currentValue: 0.8,
@@ -107,7 +106,7 @@ export const INITIAL_KPIS: Kpi[] = [
   },
    {
     id: 'ics',
-    name: 'Salud del Suelo/Medio de Cultivo',
+    name: 'Índice de Salud del Suelo/Medio de Cultivo',
     description: 'Porcentaje de parámetros de salud del suelo/sustrato en rangos óptimos.',
     unit: '%',
     currentValue: 90,
@@ -124,7 +123,7 @@ export const INITIAL_KPIS: Kpi[] = [
   },
   {
     id: 'ira',
-    name: 'Reducción Uso Pesticidas/Fertilizantes',
+    name: 'Índice de Reducción Uso Pesticidas/Fertilizantes',
     description: 'Porcentaje de reducción en el uso de agroquímicos vs. agricultura convencional o línea base.',
     unit: '%',
     currentValue: 85, // Aiming for optimal
@@ -142,7 +141,7 @@ export const INITIAL_KPIS: Kpi[] = [
   // Social KPIs
   {
     id: 'iaal',
-    name: 'Acceso a Alimentos Locales',
+    name: 'Índice de Acceso a Alimentos Locales',
     description: 'Cobertura de familias en radio de 5km.',
     unit: '% (50 fam)',
     currentValue: 75,
@@ -159,7 +158,7 @@ export const INITIAL_KPIS: Kpi[] = [
   },
   {
     id: 'ipca',
-    name: 'Participación Comunitaria',
+    name: 'Índice de Participación Comunitaria',
     description: 'Nivel de involucramiento y participación de la comunidad local.',
     unit: '% ocupación', // (para capacidad de 20 personas/actividad)
     currentValue: 80,
@@ -176,7 +175,7 @@ export const INITIAL_KPIS: Kpi[] = [
   },
   {
     id: 'isac',
-    name: 'Seguridad Alimentaria y Calidad',
+    name: 'Índice de Seguridad Alimentaria y Calidad',
     description: 'Cumplimiento de estándares de inocuidad alimentaria.',
     unit: '% cumplimiento',
     currentValue: 98, // Aiming for acceptable/optimal
@@ -194,7 +193,7 @@ export const INITIAL_KPIS: Kpi[] = [
   // Technological & Operational KPIs
   {
     id: 'iitsf',
-    name: 'Inversión en Tecnologías Smart Farming',
+    name: 'Índice de Inversión en Tecnologías Smart Farming',
     description: 'Porcentaje del presupuesto operativo anual invertido en tecnologías inteligentes.',
     unit: '% anual',
     currentValue: 18,
@@ -213,7 +212,7 @@ export const INITIAL_KPIS: Kpi[] = [
   // For simplicity, we'll represent it as a % uptime.
   {
     id: 'esm',
-    name: 'Eficiencia Sistema de Monitoreo',
+    name: 'Índice de Eficiencia Sistema de Monitoreo',
     description: 'Disponibilidad y precisión del sistema de monitoreo.',
     unit: '% uptime',
     currentValue: 99.5,
