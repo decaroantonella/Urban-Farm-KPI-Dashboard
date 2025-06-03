@@ -125,6 +125,44 @@ Los valores normalizados (`_norm`) de los KPIs base van de 0.25 (Crítico) a 1 (
 
 ## Configuración y Uso
 
+### Instalación y Ejecución Local
+
+Sigue estos pasos para configurar y ejecutar el proyecto en tu máquina local:
+
+1.  **Clonar el repositorio (si aún no lo has hecho):**
+    Si estás obteniendo el código fuente desde un repositorio Git, clónalo a tu máquina local.
+    ```bash
+    # Ejemplo: git clone https://github.com/tu-usuario/tu-repositorio.git
+    # cd tu-repositorio/Urban-Farm-KPI-Dashboard
+    ```
+    Si ya tienes los archivos, simplemente navega a la carpeta principal del proyecto.
+
+2.  **Navegar al directorio del proyecto:**
+    Asegúrate de estar en el directorio `Urban-Farm-KPI-Dashboard`.
+    ```bash
+    cd ruta/a/Urban-Farm-KPI-Dashboard
+    ```
+
+3.  **Instalar dependencias:**
+    Este proyecto utiliza Node.js y npm para la gestión de paquetes. Ejecuta el siguiente comando para instalar todas las dependencias necesarias definidas en `package.json`:
+    ```bash
+    npm install
+    ```
+
+4.  **Ejecutar en modo de desarrollo:**
+    Para iniciar la aplicación con un servidor de desarrollo (proporcionado por Vite), que incluye recarga en caliente y otras utilidades:
+    ```bash
+    npm run dev
+    ```
+    La aplicación debería abrirse automáticamente en tu navegador web predeterminado (generalmente en `http://localhost:5173` o un puerto similar).
+
+5.  **Construir para producción:**
+    Cuando estés listo para desplegar la aplicación, puedes crear una versión optimizada para producción con:
+    ```bash
+    npm run build
+    ```
+    Los archivos resultantes se guardarán en la carpeta `dist/`.
+
 ### Carga de Datos (CSV)
 
 1.  Haga clic en el botón "Cargar CSV".
@@ -225,15 +263,6 @@ graph TD
     H -- Displays Modal Info --> A;
 ```
 ![Logo](docs/Diagrama_flujo_datos_app.png)
-
-## Cómo Ejecutar
-
-Esta es una aplicación frontend estática.
-1.  Asegúrese de tener todos los archivos (`index.html`, `index.tsx`, `*.ts`, `*.tsx` en sus respectivas carpetas) en la misma estructura de directorios.
-2.  Abra el archivo `index.html` directamente en un navegador web moderno que soporte módulos ES6 y las APIs utilizadas.
-3.  Alternativamente, puede servir la carpeta raíz del proyecto usando un servidor web simple (ej. `npx serve .` o Live Server en VSCode).
-
-No hay un proceso de compilación complejo involucrado ya que los imports de React/Recharts se manejan a través de `esm.sh` en el `index.html` y Tailwind CSS se incluye vía CDN.
 
 ## Notas Adicionales
 
